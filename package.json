@@ -10,12 +10,14 @@
     "yeoman-generator"
   ],
   "dependencies": {
+    "ramda": "^0.27.1",
     "yeoman-generator": "^1.0.0"
   },
   "scripts": {
     "build": "tsc"
   },
   "devDependencies": {
+    "@types/ramda": "^0.27.42",
     "@types/yeoman-generator": "^5.2.1",
     "typescript": "^4.3.5"
   }
