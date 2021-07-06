@@ -10,6 +10,7 @@
     "yeoman-generator"
   ],
   "dependencies": {
+    "fp-ts": "^2.10.5",
     "ramda": "^0.27.1",
     "yeoman-generator": "^1.0.0"
   },
