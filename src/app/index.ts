@@ -1,5 +1,7 @@
-import Generator from 'yeoman-generator';
+import {pipe} from 'fp-ts/lib/function';
+import * as TE from 'fp-ts/TaskEither';
 import * as R from 'ramda';
+import Generator from 'yeoman-generator';
 
 interface Answers {
   isMonorepo?: boolean;
@@ -13,45 +15,65 @@ module.exports = class extends Generator {
     return this.answers[key];
   }
 
-  private async getModifiedAnswers(questions: Generator.Questions<Answers>) {
-    try {
-      return R.merge(this.answers, await this.prompt<Answers>(questions));
-    } catch(error) {
-      this.log(error);
-      return {};
-    }
+  private getModifiedAnswers(questions: Generator.Questions<Answers>) {
+    return pipe(
+      TE.tryCatch(
+        () => this.prompt<Answers>(questions),
+        (error) => {
+          this.log(`Error happened ${error}`);
+        },
+      ),
+      TE.map(R.merge(this.answers)),
+      TE.orElse(R.always(TE.of(this.answers))),
+    );
   }
 
-  async prompting() {
-    this.answers = await this.getModifiedAnswers(
-      {
-        type: "confirm",
-        name: "isMonorepo",
-        message: "Would you like to setup a monorepo?"
-      }
+  private saveEitherAnswer<T>(answersEither: TE.TaskEither<T, Answers>) {
+    return pipe(
+      answersEither,
+      TE.map((answers) => {
+        this.answers = answers;
+        return answers;
+      }),
     );
+  }
 
-    if (this.getAnswer('isMonorepo')) {
-      this.answers = await this.getModifiedAnswers({
-        type: "confirm",
-        name: "useWorkspace",
-        message: "Would you like to use yarn workspace?"
-      })
-    }
+  private getModifiedAnswersAndSave = R.pipe(
+    this.getModifiedAnswers,
+    this.saveEitherAnswer,
+  );
 
-    this.log('Thanks, going further!');
+  async prompting() {
+    pipe(
+      this.getModifiedAnswersAndSave({
+        type: 'confirm',
+        name: 'isMonorepo',
+        message: 'Would you like to setup a monorepo?',
+      }),
+    );
+    // this.answers = await
 
-      this.answers = await this.getModifiedAnswers(
-        {
-          type: this.getAnswer('isMonorepo') ? "checkbox" : 'list',
-          name: "projects",
-          message: "Choose what you would like to set up",
-          choices: ['Web', 'Mobile', 'Server']
-        }
-      )
+    // if (this.getAnswer('isMonorepo')) {
+    //   this.answers = await this.getModifiedAnswers({
+    //     type: "confirm",
+    //     name: "useWorkspace",
+    //     message: "Would you like to use yarn workspace?"
+    //   })
+    // }
+
+    // this.log('Thanks, going further!');
+
+    //   this.answers = await this.getModifiedAnswers(
+    //     {
+    //       type: this.getAnswer('isMonorepo') ? "checkbox" : 'list',
+    //       name: "projects",
+    //       message: "Choose what you would like to set up",
+    //       choices: ['Web', 'Mobile', 'Server']
+    //     }
+    //   )
   }
 
   writing() {
-    this.log("cool feature", JSON.stringify(this.answers)); // user answer `cool` used
+    this.log('cool feature', JSON.stringify(this.answers)); // user answer `cool` used
   }
 };
