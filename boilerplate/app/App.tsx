@@ -1,8 +1,14 @@
+import {NavigationContainer} from '@react-navigation/native';
 import React from 'react';
-import {View} from 'react-native';
+import 'react-native-gesture-handler';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 
 const App = () => {
-  return <View />;
+  return (
+    <SafeAreaProvider>
+      <NavigationContainer>{/* <RootNavigator /> */}</NavigationContainer>
+    </SafeAreaProvider>
+  );
 };
 
 export default App;
